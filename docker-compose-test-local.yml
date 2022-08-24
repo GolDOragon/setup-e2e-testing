@@ -1,0 +1,51 @@
+version: '3.1'
+
+services:
+
+  test:
+    container_name: backend-test
+    build:
+      context: .
+      dockerfile: Dockerfile.test-local
+    volumes:
+      - .:/usr/src/app/
+    env_file:
+      - .env
+    depends_on:
+      - test-db
+      - integresql
+    networks:
+      - test-net
+
+  test-db:
+    image: postgres:13.1-alpine
+    restart: always
+    command: "postgres -c 'shared_buffers=128MB' -c 'fsync=off' -c 'synchronous_commit=off' -c 'full_page_writes=off' -c 'max_connections=100' -c 'client_min_messages=warning'"
+    ports:
+      - ${DYNASTY_TEST_DB_PORT}:5432
+    volumes:
+      - ./config:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_DB: ${DYNASTY_TEST_DB_NAME}
+      POSTGRES_USER: &PGUSER ${DYNASTY_TEST_DB_USERNAME}
+      POSTGRES_PASSWORD: &PGPASSWORD ${DYNASTY_TEST_DB_PASSWORD}
+    networks:
+      - test-net
+
+  integresql:
+    image: allaboutapps/integresql:1.0.0
+    ports:
+      - "5000:5000"
+    depends_on:
+      - test-db
+    environment:
+      PGHOST: ${DYNASTY_TEST_DB_HOST}
+      PGUSER: *PGUSER
+      PGPASSWORD: *PGPASSWORD
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge
+

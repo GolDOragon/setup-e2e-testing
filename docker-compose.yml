@@ -1,0 +1,40 @@
+version: '3.1'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run dev:container
+    ports:
+      - ${DYNASTY_BACKEND_PORT}:${DYNASTY_BACKEND_PORT}
+    volumes:
+      - .:/usr/src/app/
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - postgres
+
+  db:
+    image: postgres:13.1-alpine
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - postgres
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  dbdata:
