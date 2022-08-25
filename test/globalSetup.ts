@@ -3,6 +3,8 @@ import { ormConfig } from '../ormConfig';
 import { entities } from '../src/database/entities';
 import { migrations } from '../src/migrations';
 import { Client } from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
 
 require('ts-node').register({ transpileOnly: true });
 
@@ -45,11 +47,15 @@ module.exports = async () => {
   console.log('[Global setup] Start');
   await createTemplateDB();
 
-  const files = ['user1', 'user2', 'user3', 'user4', 'user5', 'user6'];
+  const files = fs
+    .readdirSync(path.resolve(__dirname))
+    .filter((fn) => fn.endsWith('.e2e-spec.ts'))
+    .map((fn) => fn.split('.')[0]);
+  // const files = ['user1', 'user2', 'user3', 'user4', 'user5', 'user6'];
 
   for (let file of files) {
     await createDatabaseForTest(file);
-    console.log('created ' + file + ' db');
+    // console.log('created ' + file + ' db');
   }
   console.log('[Global setup] Finish');
 };
