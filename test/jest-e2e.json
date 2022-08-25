@@ -8,5 +8,10 @@
   "setupFilesAfterEnv": ["./setup.ts"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "globals": {
+    "ts-jest": {
+      "isolatedModules": true
+    }
   }
 }

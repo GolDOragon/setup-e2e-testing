@@ -16,9 +16,10 @@ module.exports = async () => {
       dataSource.query(`DROP DATABASE IF EXISTS "${file}" WITH (FORCE)`),
     ),
   );
+  console.log('Database instances have been dropped.')
 
   await dataSource.dropDatabase();
-  console.log('Origin db has been dropped.');
+  console.log('Template database has been dropped.');
   await dataSource.destroy();
   console.log('[Global teardown] Finish');
   process.exit(0);

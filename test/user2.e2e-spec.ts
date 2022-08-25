@@ -10,9 +10,6 @@ describe('UserController (e2e)', () => {
   });
 
   test('Post user', async () => {
-    await setTimeout(() => {
-      // small delay
-    }, 1000);
     const response = await global.request
       .post('/user')
       .set('Accept', 'application/json')
@@ -26,7 +23,6 @@ describe('UserController (e2e)', () => {
     const users = await global.request.get('/user');
 
     expect(users.body.length).toBe(1);
-    // expect(users.body[0])
   });
 
   test('Create many users', async () => {

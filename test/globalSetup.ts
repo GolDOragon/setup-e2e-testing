@@ -12,9 +12,7 @@ const createTemplateDB = async () => {
   const dataSource = new DataSource({ ...config, entities, migrations });
 
   await dataSource.initialize();
-  console.log('Initialize connection');
   await dataSource.runMigrations();
-  console.log('Apply Migrations');
 
   await dataSource.query(
     `ALTER DATABASE ${config.database} WITH is_template TRUE;`,
@@ -23,7 +21,7 @@ const createTemplateDB = async () => {
   await dataSource.destroy();
 };
 
-const createDatabaseForTest = async (dbName: string) => {
+const createInstancesForTests = async (names: string[]) => {
   const config = ormConfig();
   const client = new Client({
     host: config.host,
@@ -32,22 +30,24 @@ const createDatabaseForTest = async (dbName: string) => {
     user: config.username,
     password: config.password,
   });
+
   await client.connect();
-  await client.query(
-    `CREATE DATABASE "${dbName}" WITH TEMPLATE ${config.database}`,
-    (err) => {
-      if (err) throw err;
-      client.end();
-    },
-  );
+  for (let file of names) {
+    await client.query(
+      `CREATE DATABASE "${file}" WITH TEMPLATE ${config.database}`,
+    );
+  }
+  await client.end();
 };
 
 module.exports = async () => {
   console.log('[Global setup] Start');
-  await createTemplateDB();
 
-  for (let file of TEST_FILES) {
-    await createDatabaseForTest(file);
-  }
+  await createTemplateDB();
+  console.log('Template database has been created.');
+
+  await createInstancesForTests(TEST_FILES);
+  console.log('Database instances have been created.');
+
   console.log('[Global setup] Finish');
 };
