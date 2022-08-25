@@ -8,11 +8,7 @@ export const ormConfig = registerAs('ormconfig', () => {
   if (process.env.RUN_TEST === 'true') {
     const testOptions: PostgresConnectionOptions = {
       type: 'postgres',
-      host: process.env.DYNASTY_TEST_DB_HOST,
-      port: parseInt(process.env.DYNASTY_TEST_DB_PORT, 10),
-      username: process.env.DYNASTY_TEST_DB_USERNAME,
-      password: process.env.DYNASTY_TEST_DB_PASSWORD,
-      database: process.env.DYNASTY_TEST_DB_NAME,
+      ...global.databaseConfig, // default db for globalSetup, then templates
     };
 
     return testOptions;

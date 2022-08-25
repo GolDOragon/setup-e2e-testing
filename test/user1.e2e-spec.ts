@@ -1,4 +1,4 @@
-describe('AppController (e2e)', () => {
+describe('UserController (e2e)', () => {
   it('/ (GET)', async () => {
     const response = await global.request
       .get('/user')
