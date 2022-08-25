@@ -3,8 +3,7 @@ import { ormConfig } from '../ormConfig';
 import { entities } from '../src/database/entities';
 import { migrations } from '../src/migrations';
 import { Client } from 'pg';
-import * as fs from 'fs';
-import * as path from 'path';
+import { TEST_FILES } from './getTestFiles';
 
 require('ts-node').register({ transpileOnly: true });
 
@@ -21,7 +20,7 @@ const createTemplateDB = async () => {
     `ALTER DATABASE ${config.database} WITH is_template TRUE;`,
   );
 
-  dataSource.destroy();
+  await dataSource.destroy();
 };
 
 const createDatabaseForTest = async (dbName: string) => {
@@ -47,15 +46,8 @@ module.exports = async () => {
   console.log('[Global setup] Start');
   await createTemplateDB();
 
-  const files = fs
-    .readdirSync(path.resolve(__dirname))
-    .filter((fn) => fn.endsWith('.e2e-spec.ts'))
-    .map((fn) => fn.split('.')[0]);
-  // const files = ['user1', 'user2', 'user3', 'user4', 'user5', 'user6'];
-
-  for (let file of files) {
+  for (let file of TEST_FILES) {
     await createDatabaseForTest(file);
-    // console.log('created ' + file + ' db');
   }
   console.log('[Global setup] Finish');
 };
