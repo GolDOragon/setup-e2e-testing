@@ -2,43 +2,54 @@ import { DataSource } from 'typeorm';
 import { ormConfig } from '../ormConfig';
 import { entities } from '../src/database/entities';
 import { migrations } from '../src/migrations';
-import axios from 'axios';
-import { getHash } from './getHash';
+import { Client } from 'pg';
 
 require('ts-node').register({ transpileOnly: true });
 
-const API_PATH = 'http://integresql:5000/api/v1/templates/';
+const createTemplateDB = async () => {
+  const config = ormConfig();
+  const dataSource = new DataSource({ ...config, entities, migrations });
+
+  await dataSource.initialize();
+  console.log('Initialize connection');
+  await dataSource.runMigrations();
+  console.log('Apply Migrations');
+
+  await dataSource.query(
+    `ALTER DATABASE ${config.database} WITH is_template TRUE;`,
+  );
+
+  dataSource.destroy();
+};
+
+const createDatabaseForTest = async (dbName: string) => {
+  const config = ormConfig();
+  const client = new Client({
+    host: config.host,
+    port: config.port,
+    database: config.database,
+    user: config.username,
+    password: config.password,
+  });
+  await client.connect();
+  await client.query(
+    `CREATE DATABASE "${dbName}" WITH TEMPLATE ${config.database}`,
+    (err) => {
+      if (err) throw err;
+      client.end();
+    },
+  );
+};
+
 module.exports = async () => {
   console.log('[Global setup] Start');
+  await createTemplateDB();
 
-  const hash = getHash();
-  const apiResponse = await axios.post(API_PATH, {
-    hash,
-  });
+  const files = ['user1', 'user2', 'user3', 'user4', 'user5', 'user6'];
 
-  if (apiResponse.status !== 200) {
-    throw new Error('InitializeTemplate: bad status');
+  for (let file of files) {
+    await createDatabaseForTest(file);
+    console.log('created ' + file + ' db');
   }
-
-  global.dataSource = new DataSource({
-    ...ormConfig(),
-    ...apiResponse.data.database.config,
-    entities,
-    migrations,
-  });
-
-  await global.dataSource.initialize().then(() => {
-    console.log('Data Source has been initialized');
-  });
-  await global.dataSource.runMigrations().then(() => {
-    console.log('Migrations have been applied');
-  });
-  await global.dataSource.destroy();
-
-  const response = await axios.put(`${API_PATH}${hash}`);
-  if (response.status !== 204) {
-    throw new Error('FinalizeTemplate: bad status');
-  }
-
   console.log('[Global setup] Finish');
 };
