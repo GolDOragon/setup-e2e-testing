@@ -1,0 +1,32 @@
+version: '3.1'
+
+services:
+  test:
+    container_name: backend-test
+    build:
+      context: .
+      dockerfile: Dockerfile.test-ci
+    env_file:
+      - .env
+    depends_on:
+      - test-db
+    networks:
+      - test-net
+
+  test-db:
+    image: postgres:13.1-alpine
+    restart: always
+    ports:
+      - ${DYNASTY_TEST_DB_PORT}:5432
+    volumes:
+      - ./config:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_DB: ${DYNASTY_TEST_DB_NAME}
+      POSTGRES_USER: ${DYNASTY_TEST_DB_USERNAME}
+      POSTGRES_PASSWORD: ${DYNASTY_TEST_DB_PASSWORD}
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge

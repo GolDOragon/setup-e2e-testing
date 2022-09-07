@@ -1,0 +1,41 @@
+name: Run test manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_regression_test:
+        description: 'print "true" or "false" whether you want to run with regression tests'
+        default: 'true'
+        required: true
+
+jobs:
+  run-test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create envfile
+        uses: SpicyPizza/create-envfile@37df824bf06fa1736364fab58fd9e89dabb10e1d
+        with:
+          envkey_DYNASTY_BACKEND_TYPEORM_LOGGING: '["error"]'
+          envkey_DYNASTY_TEST_DB_HOST: test-db
+          envkey_DYNASTY_TEST_DB_PORT: 5432
+          envkey_DYNASTY_TEST_DB_USERNAME: testuser
+          envkey_DYNASTY_TEST_DB_PASSWORD: testpassword
+          envkey_DYNASTY_TEST_DB_NAME: dynasty_test
+
+          envkey_DB_NAME: dynasty
+          envkey_DB_HOST: db # like in docker-compose
+          envkey_DB_PORT: 5432
+          envkey_DB_USERNAME: testuser
+          envkey_DB_PASSWORD: testpassword
+          envkey_DB_SYNCHRONIZE: false
+
+
+
+      - name: Build docker image
+        id: build-image
+        run: |
+          docker-compose -f docker-compose-test-ci.yml up --abort-on-container-exit

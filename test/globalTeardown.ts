@@ -22,5 +22,5 @@ module.exports = async () => {
   console.log('Template database has been dropped.');
   await dataSource.destroy();
   console.log('[Global teardown] Finish');
-  process.exit(0);
+  process.exit();
 };
